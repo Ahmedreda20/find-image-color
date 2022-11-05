@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <title>Get image colors</title>
+  </head>
+  <body class="bg-slate-800 text-white p-6">
+    <div class="table mx-auto">
+      <span class="sr-only">Choose profile photo</span>
+      <input
+        type="file"
+        name="uploaded"
+        id="uploader"
+        class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100 cursor-pointer file:cursor-pointer"
+      />
+    </div>
+    <section class="container mx-auto" data-type="palette-container">
+      <ul class="list-none grid gap-4 grid-cols-6" data-type="palette"></ul>
+    </section>
+    <script src="./dist/src/index.js" type="module"></script>
+    <script type="module">
+      import GetColor from "./dist/src/index.js";
+
+      document
+        .getElementById("uploader")
+        .addEventListener("change", async function (e) {
+          let file, url, image, result;
+          e.preventDefault();
+          file = this.files[0];
+
+          if (!file) return;
+
+          url = URL.createObjectURL(file);
+          result = await new GetColor(url).init();
+
+          image = new Image();
+          image.src = url;
+          image.className = "table mx-auto my-6 w-auto max-w-lg object-contain";
+
+          document.querySelector("img")?.remove();
+
+          document.body.insertBefore(
+            image,
+            document.querySelector("[data-type='palette-container']")
+          );
+
+          // document.body.append(image);
+          const parent = document.querySelector('[data-type="palette"]');
+
+          parent.innerHTML = null;
+
+          for (const color of result.palette) {
+            const {
+              hex,
+              rgb: { r, g, b },
+            } = color;
+            const li = document.createElement("li");
+
+            li.className =
+              "border border-gray-600 text-white p-4 rounded space-y-2 text-sm";
+            // li.innerHTML = `hex: ${color.hex} <br /> RGB: ${color.rgb}`;
+            li.innerHTML = `
+            <p class="inline-flex gap-2 items-center flex-wrap">HEX: <span class="w-4 h-4 rounded-sm inline-block bg-[${hex}]"></span> ${hex}</p>
+            <p class="inline-flex gap-2 items-center flex-wrap">RGB: <span class="w-4 h-4 rounded-sm inline-block bg-[rgb(${
+              r + "_" + g + "_" + b
+            })]"></span> rgb(${r + ", " + g + ", " + b})</p>
+            `;
+
+            parent.append(li);
+          }
+        });
+    </script>
+  </body>
+</html>
