@@ -9,26 +9,93 @@
     <title>Get image colors</title>
   </head>
   <body class="bg-slate-800 text-white p-6">
-    <div class="table mx-auto">
-      <span class="sr-only">Choose profile photo</span>
-      <input
-        type="file"
-        name="uploaded"
-        id="uploader"
-        class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100 cursor-pointer file:cursor-pointer"
-      />
+    <div class="max-w-screen-lg mx-auto">
+      <section class="flex flex-col md:flex-row gap-6">
+        <aside class="md:w-1/3 2xl:max-w-sm flex-1">
+          <figure class="space-y-4 md:sticky top-6">
+            <figcaption class="p-3 rounded border border-slate-600">
+              <div
+                class="w-full rounded bg-slate-600 h-96 animate-pulse"
+                data-type="loading-image"
+              ></div>
+              <div
+                class="table mx-auto p-1 rounded-full border border-slate-400 -mt-6 z-10 relative"
+              >
+                <span
+                  class="table mx-auto p-4 rounded-full bg-slate-400"
+                  data-type="color-icon"
+                ></span>
+              </div>
+            </figcaption>
+            <div data-type="color-result"></div>
+            <blockquote class="p-3 rounded border border-slate-600">
+              <label
+                for="uploader"
+                class="bg-indigo-500 text-white text-center py-4 px-6 rounded block text-sm font-medium cursor-pointer transition hover:bg-indigo-600 active:bg-indigo-600"
+              >
+                <span>Choose image (.PNG,.JPG,.JPEG,...)</span>
+                <input
+                  type="file"
+                  name="uploaded"
+                  id="uploader"
+                  class="hidden"
+                  aria-hidden="true"
+                  hidden
+                />
+              </label>
+            </blockquote>
+          </figure>
+        </aside>
+        <main data-type="palette-container" class="flex-1">
+          <ul
+            class="list-none flex gap-4 flex-wrap w-full"
+            data-type="loading-palette"
+          >
+            <li
+              class="rounded bg-slate-600 h-20 animate-pulse flex-1 p-20"
+            ></li>
+            <li
+              class="rounded bg-slate-600 h-20 animate-pulse flex-1 p-20"
+            ></li>
+            <li
+              class="rounded bg-slate-600 h-20 animate-pulse flex-1 p-20"
+            ></li>
+            <li
+              class="rounded bg-slate-600 h-20 animate-pulse flex-1 p-20"
+            ></li>
+            <li
+              class="rounded bg-slate-600 h-20 animate-pulse flex-1 p-20"
+            ></li>
+          </ul>
+          <ul
+            class="list-none inline-flex gap-4 flex-wrap w-full"
+            data-type="palette"
+          ></ul>
+        </main>
+      </section>
     </div>
-    <section class="container mx-auto" data-type="palette-container">
-      <ul class="list-none grid gap-4 grid-cols-6" data-type="palette"></ul>
-    </section>
     <script src="./dist/src/index.js" type="module"></script>
     <script type="module">
       import GetColor from "./dist/src/index.js";
 
+      const colorIcon = document.querySelector('[data-type="color-icon"]');
+      const colorResult = document.querySelector('[data-type="color-result"]');
+
       document
         .getElementById("uploader")
         .addEventListener("change", async function (e) {
-          let file, url, image, result;
+          let file,
+            url,
+            image,
+            result,
+            loadingImage = document.querySelector(
+              '[data-type="loading-image"]'
+            ),
+            paletteLoading = document.querySelector(
+              '[data-type="loading-palette"]'
+            ),
+            parent = document.querySelector('[data-type="palette"]');
+
           e.preventDefault();
           file = this.files[0];
 
@@ -39,40 +106,119 @@
 
           image = new Image();
           image.src = url;
-          image.className = "table mx-auto my-6 w-auto max-w-lg object-contain";
+          image.className = "table mx-auto w-auto max-w-full object-contain";
 
-          document.querySelector("img")?.remove();
+          // remove hidden class and remove all child's inside palette container;
 
-          document.body.insertBefore(
-            image,
-            document.querySelector("[data-type='palette-container']")
-          );
-
-          // document.body.append(image);
-          const parent = document.querySelector('[data-type="palette"]');
-
+          loadingImage.classList.remove("hidden");
+          paletteLoading.classList.remove("hidden");
           parent.innerHTML = null;
+          colorIcon.removeAttribute("style");
+          colorResult.innerHTML = null;
 
-          for (const color of result.palette) {
-            const {
-              hex,
-              rgb: { r, g, b },
-            } = color;
-            const li = document.createElement("li");
+          image.addEventListener("load", function () {
+            document.querySelector("img")?.remove();
 
-            li.className =
-              "border border-gray-600 text-white p-4 rounded space-y-2 text-sm";
-            // li.innerHTML = `hex: ${color.hex} <br /> RGB: ${color.rgb}`;
-            li.innerHTML = `
-            <p class="inline-flex gap-2 items-center flex-wrap">HEX: <span class="w-4 h-4 rounded-sm inline-block bg-[${hex}]"></span> ${hex}</p>
-            <p class="inline-flex gap-2 items-center flex-wrap">RGB: <span class="w-4 h-4 rounded-sm inline-block bg-[rgb(${
-              r + "_" + g + "_" + b
-            })]"></span> rgb(${r + ", " + g + ", " + b})</p>
-            `;
+            loadingImage.parentNode.insertBefore(image, colorIcon.parentNode);
+            // loadingImage.parentElement.append(this);
+            loadingImage.classList.add("hidden");
+            paletteLoading.classList.add("hidden");
 
-            parent.append(li);
-          }
+            DisplayItems(result.palette, parent);
+
+            ["mousedown", "touchstart"].forEach((event) => {
+              this.addEventListener(event, () => {
+                this.addEventListener("mousemove", handleMouseMouse);
+              });
+            });
+
+            ["mouseup", "touchend"].forEach((event) => {
+              this.addEventListener(event, () => {
+                this.removeEventListener("mousemove", handleMouseMouse);
+              });
+            });
+          });
         });
+
+      function DisplayItems(palette, parent) {
+        for (const color of palette) {
+          const {
+            hex,
+            rgb: { r, g, b },
+          } = color;
+          const li = document.createElement("li");
+
+          li.className =
+            "border border-gray-600 text-white p-4 rounded space-y-2 text-sm flex-[max-content]";
+          // li.innerHTML = `hex: ${color.hex} <br /> RGB: ${color.rgb}`;
+          li.innerHTML = `
+                  <p class="flex gap-2 items-center flex-wrap">HEX: <span class="w-4 h-4 rounded-sm inline-block bg-[${hex}]"></span> ${hex}</p>
+                  <p class="flex gap-2 items-center flex-wrap">RGB: <span class="w-4 h-4 rounded-sm inline-block bg-[rgb(${
+                    r + "_" + g + "_" + b
+                  })]"></span> rgb(${r + ", " + g + ", " + b})</p>
+                  `;
+
+          parent.append(li);
+        }
+      }
+
+      let canvas = document.createElement("canvas"),
+        ctx = canvas.getContext("2d");
+
+      function handleMouseMouse(e) {
+        e.preventDefault();
+        const { offsetY, offsetX } = e;
+        canvas.width = this.width;
+        canvas.height = this.height;
+        ctx.clearRect(0, 0, this.width, this.height);
+        ctx.drawImage(this, 0, 0, this.width, this.height);
+        const data = ctx.getImageData(
+          offsetX,
+          offsetY,
+          this.width,
+          this.height
+        ).data;
+        const rgb = {
+          r: data[0],
+          g: data[1],
+          b: data[2],
+          a: data[3],
+        };
+
+        const hex = GetHex(rgb);
+        const { r, g, b } = rgb;
+
+        colorIcon.style.cssText = `
+        background-color: ${hex}
+        `;
+        colorResult.innerHTML = null;
+        const div = document.createElement("div");
+
+        div.className =
+          "border border-gray-600 text-white p-4 rounded space-y-2 text-sm flex-[max-content]";
+        // li.innerHTML = `hex: ${color.hex} <br /> RGB: ${color.rgb}`;
+        div.innerHTML = `
+                  <p class="flex gap-2 items-center flex-wrap">HEX: <span class="w-4 h-4 rounded-sm inline-block bg-[${hex}]"></span> ${hex}</p>
+                  <p class="flex gap-2 items-center flex-wrap">RGB: <span class="w-4 h-4 rounded-sm inline-block bg-[rgb(${
+                    r + "_" + g + "_" + b
+                  })]"></span> rgb(${r + ", " + g + ", " + b})</p>
+                  `;
+
+        colorResult.appendChild(div);
+      }
+
+      function GetHex(rgb) {
+        const { r, g, b } = rgb;
+        return (
+          "#" +
+          [r, g, b]
+            .map((x) => {
+              const hex = x.toString(16);
+              return hex.length === 1 ? "0" + hex : hex;
+            })
+            .join("")
+        );
+      }
     </script>
   </body>
 </html>
