@@ -139,7 +139,7 @@
             ["mousedown", "touchstart"].forEach((event) => {
               // event.preventDefault();
               this.addEventListener(event, (e) => {
-                e.preventDefault();
+                if (event !== "touchstart") e.preventDefault();
                 this.addEventListener("mousemove", handleMouseMouse);
               });
             });
@@ -147,7 +147,7 @@
             ["mouseup", "touchend"].forEach((event) => {
               // event.preventDefault();
               this.addEventListener(event, (e) => {
-                e.preventDefault();
+                if (event !== "touchend") e.preventDefault();
                 this.removeEventListener("mousemove", handleMouseMouse);
               });
             });
