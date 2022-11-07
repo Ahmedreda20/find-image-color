@@ -10,7 +10,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       img {
-        pointer-events: none !important;
+        user-select: none;
+        -moz-user-select: none;
+        -webkit-user-select: none;
       }
     </style>
     <title>Get image colors</title>
@@ -113,7 +115,8 @@
 
           image = new Image();
           image.src = url;
-          image.className = "table mx-auto w-auto max-w-full object-contain";
+          image.className =
+            "table mx-auto w-auto max-w-full object-contain cursor-crosshair";
 
           // remove hidden class and remove all child's inside palette container;
 
@@ -134,13 +137,17 @@
             DisplayItems(result.palette, parent);
 
             ["mousedown", "touchstart"].forEach((event) => {
-              this.addEventListener(event, () => {
+              // event.preventDefault();
+              this.addEventListener(event, (e) => {
+                e.preventDefault();
                 this.addEventListener("mousemove", handleMouseMouse);
               });
             });
 
             ["mouseup", "touchend"].forEach((event) => {
-              this.addEventListener(event, () => {
+              // event.preventDefault();
+              this.addEventListener(event, (e) => {
+                e.preventDefault();
                 this.removeEventListener("mousemove", handleMouseMouse);
               });
             });
@@ -174,17 +181,22 @@
 
       function handleMouseMouse(e) {
         e.preventDefault();
+
         const { offsetY, offsetX } = e;
+
         canvas.width = this.width;
         canvas.height = this.height;
+
         ctx.clearRect(0, 0, this.width, this.height);
         ctx.drawImage(this, 0, 0, this.width, this.height);
+
         const data = ctx.getImageData(
           offsetX,
           offsetY,
           this.width,
           this.height
         ).data;
+
         const rgb = {
           r: data[0],
           g: data[1],
@@ -199,6 +211,7 @@
         background-color: ${hex}
         `;
         colorResult.innerHTML = null;
+
         const div = document.createElement("div");
 
         div.className =
